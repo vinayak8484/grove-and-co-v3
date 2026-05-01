@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grove & Co. — Brunch & Specialty Coffee, Berlin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ═══════════════════════════════════════════════════
+       DESIGN TOKENS (from Haven Annecy source)
+       ═══════════════════════════════════════════════════ */
+    :root {
+      --color-bg:       #fffaf7;
+      --color-cream:    #efdacc;
+      --color-text:     #2b1a12;
+      --color-accent:   #c1643b;
+      --color-muted:    rgba(43,26,18,0.55);
+
+      --font-script:    'Pinyon Script', cursive;
+      --font-display:   'Playfair Display', Georgia, serif;
+      --font-body:      'DM Sans', sans-serif;
+
+      --slide-in-duration:  0.9s;
+      --slide-in-distance:  40px;
+      --slide-in-curve:     cubic-bezier(0.2, 0.8, 0.2, 1);
+      --list-item-step:     0.09s;
+      --header-speed:       0.4s;
+      --draw-curve:         cubic-bezier(0.45, 0, 0.55, 1);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RESET
+       ═══════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; padding: 0; margin: 0; border: none; }
+    html { font-size: 18px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      background: var(--color-bg);
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: var(--color-text); text-decoration: none; display: inline-block; transition: color 500ms ease; }
+    img { max-width: 100%; display: block; }
+    ul { list-style: none; }
+
+    /* ═══════════════════════════════════════════════════
+       HAVEN ANIMATION SYSTEM
+       ═══════════════════════════════════════════════════ */
+    .animate--slide-in {
+      will-change: transform, opacity;
+      opacity: 0;
+      transform: translateY(var(--slide-in-distance));
+      transition:
+        opacity var(--slide-in-duration) var(--slide-in-curve),
+        transform var(--slide-in-duration) var(--slide-in-curve);
+    }
+    .animate--slide-in.active { opacity: 1; transform: translate(0,0); }
+    @media (prefers-reduced-motion: reduce) {
+      .animate--slide-in { opacity: 1 !important; transform: none !important; transition: none !important; }
+    }
+
+    .animate--list-item {
+      opacity: 0;
+      transform: translateY(40px);
+      transition:
+        opacity 0.6s var(--slide-in-curve),
+        transform 0.6s var(--slide-in-curve);
+      transition-delay: calc(var(--list-item-index, 0) * var(--list-item-step));
+    }
+    .animate--list-item.active { opacity: 1; transform: translateY(0); }
+
+    @keyframes drawSVG { to { stroke-dashoffset: 0; } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════ */
+    .region-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      transition: background var(--header-speed) var(--draw-curve);
+    }
+    .region-header .region {
+      display: grid;
+      grid-template-columns: 14rem 1fr auto;
+      align-items: center;
+      padding: 1.5rem 1.5rem 0.75rem;
+      gap: 1.5rem;
+    }
+    .region-header.is-fixed { background: rgba(255,250,247,0.95); backdrop-filter: blur(10px); }
+    .region-header.is-fixed .region { padding: 0.75rem 1.5rem; }
+
+    .site-logo .logo-wordmark {
+      font-family: var(--font-script);
+      font-size: 2.4rem;
+      color: var(--color-text);
+      line-height: 1;
+      display: inline-block;
+    }
+
+    .nav-main ul {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+    }
+    .nav-main ul li a {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--color-text);
+      text-align: center;
+      line-height: 1.4;
+    }
+    .nav-main ul li a span { display: block; font-size: 0.7rem; font-weight: 400; opacity: 0.6; margin-top: 2px; text-transform: none; }
+    .nav-main ul li a.is-active,
+    .nav-main ul li a:hover { color: var(--color-accent); }
+
+    .nav-action ul {
+      display: flex;
+      gap: 0.5rem;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .nav-action ul li a {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0.7rem 1.75rem;
+      border-radius: 30px;
+      transition: all 500ms ease;
+    }
+    .nav-action ul li:first-child a {
+      background-color: var(--color-accent);
+      color: white;
+      border: 2px solid var(--color-accent);
+    }
+    .nav-action ul li:first-child a:hover { background: white; color: var(--color-accent); }
+    .nav-action ul li:last-child a { color: var(--color-accent); padding: 0.4rem 1.75rem; font-size: 0.7rem; }
+    .nav-action ul li:last-child a:hover { color: var(--color-text); }
+
+    /* Side rail with rotated text (matches Haven's "W. Nominee" badge) */
+    .side-badge {
+      position: fixed;
+      left: 0; top: 30%;
+      width: 38px;
+      height: 200px;
+      background: var(--color-text);
+      color: white;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .side-badge::before {
+      content: "G.";
+      font-family: var(--font-script);
+      font-size: 1.5rem;
+      writing-mode: horizontal-tb;
+      transform: rotate(180deg);
+      margin-bottom: 1rem;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: normal;
+      display: block;
+    }
+
+    /* Hamburger (mobile) */
+    .hamburger { display: none; cursor: pointer; flex-direction: column; gap: 5px; padding: 0.5rem; }
+    .hamburger span { display: block; width: 22px; height: 1.5px; background: var(--color-text); transition: 0.3s; }
+
+    /* ═══════════════════════════════════════════════════
+       HERO BANNER (the centerpiece — letter-clipped photos)
+       ═══════════════════════════════════════════════════ */
+    .field-banner {
+      min-height: 100vh;
+      padding: 9rem 1.5rem 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Hand-drawn line art that swoops across hero (Haven uses a line drawing) */
+    .hero-lineart {
+      position: absolute;
+      top: 0; right: -5%;
+      width: 75%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.55;
+    }
+    .hero-lineart svg { width: 100%; height: 100%; }
+    .hero-lineart path {
+      fill: none;
+      stroke: var(--color-cream);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .hero-lineart.is-active path {
+      stroke-dasharray: var(--len, 3000);
+      stroke-dashoffset: var(--len, 3000);
+      animation: drawSVG 3.5s var(--draw-curve) 0.4s forwards;
+    }
+
+    /* THE BIG WORD — food photos clipped into letters */
+    .hero-word {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      margin-bottom: 3rem;
+      animation: fadeUp 1.2s var(--slide-in-curve) 0.2s both;
+    }
+    .hero-word svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Hero text grid below the big word */
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      max-width: 100%;
+      padding: 0 1rem;
+    }
+
+    .hero-headline {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 700;
+      font-size: clamp(1.75rem, 3vw, 2.6rem);
+      line-height: 1.15;
+      color: var(--color-text);
+      letter-spacing: -0.5px;
+    }
+
+    .hero-body {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--color-text);
+      opacity: 0.85;
+    }
+    .hero-body p:not(:last-child) { margin-bottom: 0.75rem; }
+    .hero-body strong { font-weight: 500; font-style: italic; }
+
+    /* Language switcher (bottom right corner like Haven) */
+    .lang-switch {
+      position: fixed;
+      bottom: 1.5rem; right: 1.5rem;
+      z-index: 200;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--color-text);
+      opacity: 0.5;
+    }
+
+    /* Field links (Haven button system) */
+    .field-link a {
+      display: inline-block;
+      padding: 0.75rem 1.75rem;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      border-radius: 30px;
+      letter-spacing: 1px;
+    }
+    .field-link:not(.second) a {
+      color: white;
+      background: var(--color-accent);
+      border: 2px solid var(--color-accent);
+      transition: background-color 500ms ease, color 500ms ease;
+    }
+    .field-link:not(.second) a:hover { background: white; color: var(--color-accent); }
+    .field-link.second a {
+      color: var(--color-accent);
+      border: 2px solid var(--color-accent);
+      background: white;
+      transition: background-color 500ms ease;
+    }
+    .field-link.second a:hover { background: var(--color-cream); border-color: var(--color-cream); }
+    .field-links { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+
+    /* ═══════════════════════════════════════════════════
+       ANNOUNCEMENT BAR
+       ═══════════════════════════════════════════════════ */
+    .region-bottombar {
+      background: var(--color-text);
+      color: white;
+      font-size: 0.82rem;
+      padding: 0.85rem 1.5rem;
+      text-align: center;
+    }
+    .region-bottombar strong { font-style: italic; font-weight: 500; color: var(--color-cream); }
+    .region-bottombar a { color: white; margin-left: 0.5rem; font-style: italic; }
+
+    /* ═══════════════════════════════════════════════════
+       SECTIONS
+       ═══════════════════════════════════════════════════ */
+    .section-heading {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      display: block;
+      margin-bottom: 1rem;
+    }
+    h2.block-title {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: clamp(2rem, 4.5vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--color-text);
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.5px;
+    }
+    .field-body p { line-height: 1.65; font-size: 0.95rem; }
+    .field-body p:not(:last-child) { margin-bottom: 0.85rem; }
+    .field-body strong { font-weight: 500; font-style: italic; }
+
+    /* Two-teaser grid */
+    .teaser-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    @media (min-width: 960px) {
+      .teaser-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .teaser-block {
+      padding: 4rem 2rem;
+      border-top: 2px solid var(--color-accent);
+    }
+    @media (min-width: 960px) {
+      .teaser-block { padding: 5rem 4rem; }
+      .teaser-block:last-child { border-left: 2px solid var(--color-accent); }
+    }
+    .teaser-icon { font-size: 3rem; margin-bottom: 1.5rem; }
+
+    /* ═══════════════════════════════════════════════════
+       SECONDARY HERO BAND — small images grid
+       ═══════════════════════════════════════════════════ */
+    .photo-grid-section {
+      padding: 5rem 1.5rem;
+      border-top: 2px solid var(--color-accent);
+      background: var(--color-bg);
+    }
+    .photo-grid-header {
+      max-width: 1200px;
+      margin: 0 auto 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+    .photo-grid-header > div { max-width: 600px; }
+    .photo-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 960px) { .photo-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .photo-card {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      background: var(--color-cream);
+      cursor: pointer;
+    }
+    .photo-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s var(--slide-in-curve);
+    }
+    .photo-card:hover img { transform: scale(1.07); }
+    .photo-card-label {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 1rem 1.25rem;
+      background: linear-gradient(to top, rgba(43,26,18,0.7), transparent 80%);
+      color: white;
+    }
+    .photo-card-label h4 { font-family: var(--font-display); font-style: italic; font-size: 1rem; font-weight: 600; }
+    .photo-card-label span { font-size: 0.72rem; opacity: 0.85; letter-spacing: 0.5px; }
+
+    /* ═══════════════════════════════════════════════════
+       COFFEE SECTION (split with svg)
+       ═══════════════════════════════════════════════════ */
+    .split-section {
+      padding: 5rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      border-top: 2px solid var(--color-accent);
+    }
+    @media (min-width: 960px) {
+      .split-section { grid-template-columns: 1fr 1fr; align-items: center; padding: 7rem 3rem; }
+    }
+    .split-illustration { display: flex; justify-content: center; }
+
+    .feature-list {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .feature-list li {
+      padding: 1.25rem 0;
+      border-top: 1px solid rgba(43,26,18,0.12);
+    }
+    .feature-list li strong {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 600;
+      font-size: 1.1rem;
+      display: block;
+      margin-bottom: 0.35rem;
+      color: var(--color-text);
+    }
+    .feature-list li p { font-size: 0.88rem; color: var(--color-muted); line-height: 1.6; }
+
+    /* Italic arrow link */
+    .link {
+      font-style: italic;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--color-text);
+      transition: color 500ms ease;
+      margin-top: 1.25rem;
+    }
+    .link::after {
+      content: '→';
+      transition: translate 500ms ease;
+      font-style: normal;
+    }
+    .link:hover::after { translate: 0.25rem; }
+    .link:hover { color: var(--color-accent); }
+
+    /* ═══════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════ */
+    .region-footer { margin-top: 3rem; padding: 0 1.5rem; }
+
+    .footer-title-wrap {
+      overflow: hidden;
+      padding: 0 1.5rem 0;
+    }
+    .footer-title-special {
+      font-family: var(--font-script);
+      font-size: 22vw;
+      color: var(--color-cream);
+      line-height: 0.9;
+      margin-bottom: -8%;
+      text-align: center;
+    }
+
+    .region-footer .region {
+      border-top: 2px solid var(--color-accent);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    @media (min-width: 960px) {
+      .region-footer .region {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        padding-top: 1.5rem;
+      }
+      .region-footer .region > * { padding: 1rem 3rem 2rem; }
+      .region-footer .region > *:not(:last-child) { border-right: 2px solid var(--color-accent); }
+    }
+    @media (max-width: 959px) {
+      .region-footer .region > * { padding: 2rem 1.5rem; }
+      .region-footer .region > *:not(:last-child) { border-bottom: 2px solid var(--color-accent); }
+    }
+
+    .footer-block-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: block;
+      color: var(--color-text);
+    }
+    .footer-block-body { font-size: 0.85rem; line-height: 1.85; color: var(--color-muted); }
+    .footer-block-body a { color: var(--color-muted); }
+    .footer-block-body a:hover { color: var(--color-accent); }
+    .footer-block-body strong { font-weight: 500; font-style: italic; color: var(--color-text); display: block; margin-top: 0.75rem; }
+
+    .footer-hours dl { display: grid; grid-template-columns: auto 1fr; gap: 0.15rem 1rem; }
+    .footer-hours dt { color: var(--color-text); font-weight: 500; }
+    .footer-hours dd { color: var(--color-muted); }
+
+    .social-links { display: flex; gap: 0.75rem; margin-top: 1rem; }
+    .social-links a {
+      width: 36px; height: 36px;
+      border: 1px solid rgba(43,26,18,0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      transition: all 500ms ease;
+    }
+    .social-links a:hover { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+
+    .footer-bottom {
+      background: var(--color-text);
+      color: rgba(255,255,255,0.6);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.75rem;
+    }
+    .footer-bottom a { color: rgba(255,255,255,0.6); }
+    .footer-bottom a:hover { color: white; }
+    .footer-bottom-links { display: flex; gap: 1.5rem; }
+
+    /* ═══════════════════════════════════════════════════
+       MOBILE
+       ═══════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .region-header .region { grid-template-columns: 1fr auto; }
+      .nav-main { display: none; }
+      .nav-action { display: none; }
+      .hamburger { display: flex; }
+      .side-badge { display: none; }
+      .hero-content { grid-template-columns: 1fr; gap: 1.5rem; }
+      .field-banner { padding-top: 6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     SIDE BADGE
+     ═══════════════════════════════════════════════════ -->
+<div class="side-badge">Best Brunch '26</div>
+
+<!-- ═══════════════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════════════ -->
+<header class="region-header" id="site-header">
+  <div class="region">
+    <div class="site-logo">
+      <span class="logo-wordmark">grove</span>
+    </div>
+
+    <nav class="nav-main">
+      <ul>
+        <li><a href="#" class="is-active">Home</a></li>
+        <li><a href="#coffee">Coffee <span>8:30 – 18:00</span></a></li>
+        <li><a href="#brunch">Brunch <span>9:00 – 14:00</span></a></li>
+        <li><a href="#about">Grove</a></li>
+      </ul>
+    </nav>
+
+    <nav class="nav-action">
+      <ul>
+        <li><a href="#visit">Reserve</a></li>
+        <li><a href="#visit">Gifting</a></li>
+      </ul>
+    </nav>
+
+    <div class="hamburger" onclick="this.classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════
+     HERO BANNER — letter-clipped photos
+     ═══════════════════════════════════════════════════ -->
+<section class="field-banner">
+
+  <!-- Hand-drawn line art swooping across -->
+  <div class="hero-lineart" id="lineart">
+    <svg viewBox="0 0 800 700" preserveAspectRatio="xMidYMid meet">
+      <!-- Curvy line art reminiscent of Haven's hand-drawn swoop -->
+      <path d="M 100 50 C 200 30, 350 80, 450 150 C 580 240, 650 100, 720 180 C 760 230, 730 320, 680 360 C 600 410, 500 380, 450 440 C 400 510, 480 570, 550 580 C 620 590, 700 540, 720 480"/>
+      <!-- Small organic detail at end -->
+      <circle cx="720" cy="180" r="3" fill="#efdacc" stroke="none"/>
+      <circle cx="100" cy="50" r="3" fill="#efdacc" stroke="none"/>
+    </svg>
+  </div>
+
+  <!-- THE BIG WORD: photos clipped into letters -->
+  <div class="hero-word">
+    <svg viewBox="0 0 1200 380" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <!-- Each letter is a clipPath -->
+        <clipPath id="clip-G"><path d="M 50 50 L 50 330 L 230 330 L 230 200 L 145 200 L 145 240 L 185 240 L 185 290 L 95 290 L 95 90 L 230 90 L 230 50 Z"/></clipPath>
+        <clipPath id="clip-R"><path d="M 280 50 L 280 330 L 325 330 L 325 220 L 380 220 L 425 330 L 475 330 L 425 215 C 470 195, 480 130, 460 90 C 440 60, 405 50, 370 50 Z M 325 90 L 380 90 C 410 90, 420 110, 420 135 C 420 165, 405 180, 380 180 L 325 180 Z"/></clipPath>
+          <clipPath id="clip-O"><path d="M 590 50 C 525 50, 495 110, 495 190 C 495 270, 525 330, 590 330 C 655 330, 685 270, 685 190 C 685 110, 655 50, 590 50 Z M 590 90 C 625 90, 640 130, 640 190 C 640 250, 625 290, 590 290 C 555 290, 540 250, 540 190 C 540 130, 555 90, 590 90 Z"/></clipPath>
+          <clipPath id="clip-V"><path d="M 720 50 L 770 50 L 815 270 L 860 50 L 910 50 L 845 330 L 785 330 Z"/></clipPath>
+          <clipPath id="clip-E"><path d="M 940 50 L 940 330 L 1130 330 L 1130 290 L 985 290 L 985 210 L 1100 210 L 1100 170 L 985 170 L 985 90 L 1130 90 L 1130 50 Z"/></clipPath>
+      </defs>
+
+      <!-- Background placeholder color (cream) -->
+      <rect x="0" y="0" width="1200" height="380" fill="transparent"/>
+
+      <!-- G — fried egg / breakfast plate (Unsplash food) -->
+      <image href="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&h=400&fit=crop&q=80"
+             x="40" y="40" width="200" height="300" preserveAspectRatio="xMidYMid slice"
+             clip-path="url(#clip-G)"/>
+
+      <!-- R — granola/breakfast bowl -->
+      <image href="https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400&h=400&fit=crop&q=80"
+             x="270" y="40" width="220" height="300" preserveAspectRatio="xMidYMid slice"
+             clip-path="url(#clip-R)"/>
+
+      <!-- O — pancakes -->
+      <image href="https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=400&h=400&fit=crop&q=80"
+             x="485" y="40" width="220" height="300" preserveAspectRatio="xMidYMid slice"
+             clip-path="url(#clip-O)"/>
+
+      <!-- V — avocado toast / salad -->
+      <image href="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&h=400&fit=crop&q=80"
+             x="700" y="40" width="220" height="300" preserveAspectRatio="xMidYMid slice"
+             clip-path="url(#clip-V)"/>
+
+      <!-- E — latte art -->
+      <image href="https://images.unsplash.com/photo-1511920170033-f8396924c348?w=400&h=400&fit=crop&q=80"
+             x="930" y="40" width="220" height="300" preserveAspectRatio="xMidYMid slice"
+             clip-path="url(#clip-E)"/>
+
+      <!-- Subtle stroke on letterforms for definition -->
+      <g fill="none" stroke="rgba(43,26,18,0.05)" stroke-width="1">
+        <path d="M 50 50 L 50 330 L 230 330 L 230 200 L 145 200 L 145 240 L 185 240 L 185 290 L 95 290 L 95 90 L 230 90 L 230 50 Z"/>
+        <path d="M 280 50 L 280 330 L 325 330 L 325 220 L 380 220 L 425 330 L 475 330 L 425 215 C 470 195, 480 130, 460 90 C 440 60, 405 50, 370 50 Z M 325 90 L 380 90 C 410 90, 420 110, 420 135 C 420 165, 405 180, 380 180 L 325 180 Z"/>
+        <path d="M 590 50 C 525 50, 495 110, 495 190 C 495 270, 525 330, 590 330 C 655 330, 685 270, 685 190 C 685 110, 655 50, 590 50 Z M 590 90 C 625 90, 640 130, 640 190 C 640 250, 625 290, 590 290 C 555 290, 540 250, 540 190 C 540 130, 555 90, 590 90 Z"/>
+        <path d="M 720 50 L 770 50 L 815 270 L 860 50 L 910 50 L 845 330 L 785 330 Z"/>
+        <path d="M 940 50 L 940 330 L 1130 330 L 1130 290 L 985 290 L 985 210 L 1100 210 L 1100 170 L 985 170 L 985 90 L 1130 90 L 1130 50 Z"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Hero text content -->
+  <div class="hero-content">
+    <div class="animate--slide-in">
+      <h1 class="hero-headline">
+        New Zealand Brunch &<br/>
+        Coffee Shop in the heart of<br/>
+        Berlin Mitte
+      </h1>
+      <div class="field-links">
+        <div class="field-link"><a href="#brunch">The Brunch Menu</a></div>
+        <div class="field-link second"><a href="#visit">Reserve a table</a></div>
+      </div>
+    </div>
+    <div class="hero-body animate--slide-in" style="transition-delay:0.15s">
+      <p>We believe coffee and food are more than simple pleasures: they're moments to connect, to travel differently, and to feel right at home.</p>
+      <p><strong>Welcome to Grove!</strong></p>
+    </div>
+  </div>
+</section>
+
+<div class="lang-switch">EN · DE</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ANNOUNCEMENT BAR
+     ═══════════════════════════════════════════════════ -->
+<div class="region-bottombar">
+  Diesen Sommer bei Grove · <strong>Summer Menu is live</strong> — fresh stone fruit, whipped ricotta, cold brew on tap.
+  <a href="#brunch">See the menu →</a>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SEASONAL FEATURE
+     ═══════════════════════════════════════════════════ -->
+<section class="teaser-grid" id="brunch">
+  <div class="teaser-block animate--slide-in">
+    <div class="teaser-icon">☀️</div>
+    <span class="section-heading">Grove Summer Brunch 2026</span>
+    <h2 class="block-title">Bold plates,<br/>golden days.</h2>
+    <div class="field-body">
+      <p>Our summer menu brings the warmth of New Zealand to Berlin — stone fruit smash on sourdough, bircher pancakes with strawberry and lemon curd, and a new breakfast burger with smoked cheddar.</p>
+      <p><strong>Every season, a completely new brunch.</strong> Three months of recipes by Chef Lena and her team.</p>
+    </div>
+    <a href="#" class="link">Brunch time</a>
+  </div>
+
+  <div class="teaser-block animate--slide-in" style="transition-delay:0.15s">
+    <div class="teaser-icon">☕</div>
+    <span class="section-heading">Guest Roaster · Cabin Coffee Co. Hamburg</span>
+    <h2 class="block-title">Light, bright,<br/>from Hamburg.</h2>
+    <div class="field-body">
+      <p>Each season we partner with a different specialty roaster. This summer we host Cabin Coffee Co. from Hamburg — an Ethiopian Yirgacheffe with notes of bergamot, peach, and rose.</p>
+      <p>Available as espresso, flat white, and cold filter — while stocks last.</p>
+    </div>
+    <a href="#" class="link">Coffee time</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     PHOTO GRID (real food photos this time)
+     ═══════════════════════════════════════════════════ -->
+<section class="photo-grid-section">
+  <div class="photo-grid-header">
+    <div class="animate--slide-in">
+      <span class="section-heading">On the plate · Summer 2026</span>
+      <h2 class="block-title">Fresh, creative, generous.</h2>
+      <p style="font-size:0.95rem;color:var(--color-muted);max-width:500px">Seasonal cooking, local Berlin produce. <strong>A new menu every three months</strong> — by Chef Lena and team.</p>
+    </div>
+    <a href="#" class="link animate--slide-in" style="transition-delay:0.15s">Full brunch menu</a>
+  </div>
+
+  <div class="photo-grid">
+    <div class="photo-card animate--slide-in"><img src="https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=400&h=400&fit=crop&q=80" alt=""/><div class="photo-card-label"><h4>Eggs Benedict</h4><span>Pulled pork · hollandaise</span></div></div>
+    <div class="photo-card animate--slide-in" style="transition-delay:0.08s"><img src="https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=400&h=400&fit=crop&q=80" alt=""/><div class="photo-card-label"><h4>Bircher Pancakes</h4><span>Strawberry · lemon curd</span></div></div>
+    <div class="photo-card animate--slide-in" style="transition-delay:0.16s"><img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&h=400&fit=crop&q=80" alt=""/><div class="photo-card-label"><h4>Avocado Toast</h4><span>Smoked salmon · dill</span></div></div>
+    <div class="photo-card animate--slide-in" style="transition-delay:0.24s"><img src="https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400&h=400&fit=crop&q=80" alt=""/><div class="photo-card-label"><h4>Granola Bowl</h4><span>House granola · seasonal fruit</span></div></div>
+    <div class="photo-card animate--slide-in"><img src="https://images.unsplash.com/photo-1565299543923-37dd37887442?w=400&h=400&fit=crop&q=80" alt=""/><div class="photo-card-label"><h4>Summer Focaccia</h4><span>Whipped feta · herb oil</span></div></div>
+    <div class="photo-card animate--slide-in" style="transition-delay:0.08s"><img src="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&h=400&fit=crop&q=80" alt=""/><div class="photo-card-label"><h4>Breckie Plate</h4><span>Two ways · sourdough · relish</span></div></div>
+    <div class="photo-card animate--slide-in" style="transition-delay:0.16s"><img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?w=400&h=400&fit=crop&q=80" alt=""/><div class="photo-card-label"><h4>Flat White</h4><span>Ethiopian Yirgacheffe</span></div></div>
+    <div class="photo-card animate--slide-in" style="transition-delay:0.24s"><img src="https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=400&h=400&fit=crop&q=80" alt=""/><div class="photo-card-label"><h4>Smoothie Bowl</h4><span>Açai · kiwi · granola</span></div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     COFFEE SECTION
+     ═══════════════════════════════════════════════════ -->
+<section class="split-section" id="coffee">
+  <div class="split-illustration animate--slide-in">
+    <svg viewBox="0 0 320 360" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:300px;width:100%">
+      <path d="M115 70 Q112 55 115 40 Q118 25 115 10" stroke="#c1643b" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+      <path d="M160 65 Q157 50 160 35 Q163 20 160 5" stroke="#c1643b" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+      <path d="M205 70 Q202 55 205 40 Q208 25 205 10" stroke="#c1643b" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+      <rect x="80" y="100" width="160" height="130" rx="14" fill="white" stroke="#2b1a12" stroke-width="2"/>
+      <ellipse cx="160" cy="100" rx="80" ry="16" fill="white" stroke="#2b1a12" stroke-width="2"/>
+      <ellipse cx="160" cy="100" rx="64" ry="11" fill="#c1643b" opacity="0.55"/>
+      <path d="M135 96 Q160 84 185 96 Q160 108 135 96Z" fill="white" opacity="0.85"/>
+      <path d="M240 130 Q272 130 272 165 Q272 200 240 200" stroke="#2b1a12" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="160" cy="240" rx="100" ry="18" fill="white" stroke="#2b1a12" stroke-width="2"/>
+      <ellipse cx="160" cy="240" rx="86" ry="12" fill="none" stroke="#efdacc" stroke-width="1.5"/>
+      <text x="160" y="290" text-anchor="middle" font-family="'Pinyon Script', cursive" font-size="32" fill="#c1643b">specialty coffee</text>
+      <text x="160" y="315" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="9" fill="#2b1a12" letter-spacing="3" opacity="0.5">ALL DAY · BERLIN</text>
+    </svg>
+  </div>
+
+  <div class="animate--slide-in" style="transition-delay:0.15s">
+    <span class="section-heading">All day · 8:30 – 18:00</span>
+    <h2 class="block-title">Specialty coffee,<br/>explored properly.</h2>
+    <div class="field-body">
+      <p>We rotate guest roasters every season and train our baristas to do every method justice — espresso, flat white, Aussie-style, filter brews.</p>
+      <p><strong>Coffee is not your cup of tea?</strong> Try our white drinks — chai, matcha, ube — our teas, cold brew, and fresh juices.</p>
+    </div>
+    <ul class="feature-list">
+      <li class="animate--list-item" style="--list-item-index:0"><strong>Espresso & Milk Drinks</strong><p>Flat white, cappuccino, latte — our seasonal house espresso from a Berlin roastery.</p></li>
+      <li class="animate--list-item" style="--list-item-index:1"><strong>Filter Brews</strong><p>V60, AeroPress, Chemex. Light, transparent, always single origin.</p></li>
+      <li class="animate--list-item" style="--list-item-index:2"><strong>Cold Brew & Signatures</strong><p>Matcha latte, ube milk, cold brew tonic, spiced chai.</p></li>
+    </ul>
+    <a href="#" class="link">The specialty coffee menu</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     ABOUT
+     ═══════════════════════════════════════════════════ -->
+<section class="split-section" id="about">
+  <div class="split-illustration animate--slide-in">
+    <svg viewBox="0 0 360 400" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:340px;width:100%">
+      <rect x="30" y="120" width="300" height="250" rx="4" stroke="#2b1a12" stroke-width="1.5" fill="#fffaf7"/>
+      <path d="M20 120 Q180 95 340 120" stroke="#c1643b" stroke-width="2" fill="none"/>
+      <path d="M20 120 L20 145 Q180 120 340 145 L340 120" fill="#efdacc" stroke="#c1643b" stroke-width="1.5"/>
+      <line x1="80" y1="120" x2="75" y2="145" stroke="#c1643b" stroke-width="1" opacity="0.5"/>
+      <line x1="140" y1="112" x2="135" y2="137" stroke="#c1643b" stroke-width="1" opacity="0.5"/>
+      <line x1="200" y1="108" x2="195" y2="133" stroke="#c1643b" stroke-width="1" opacity="0.5"/>
+      <line x1="260" y1="111" x2="255" y2="136" stroke="#c1643b" stroke-width="1" opacity="0.5"/>
+      <rect x="50" y="160" width="100" height="90" rx="3" stroke="#2b1a12" stroke-width="1.5" fill="#efdacc" opacity="0.5"/>
+      <rect x="155" y="210" width="50" height="160" rx="3" stroke="#2b1a12" stroke-width="1.5" fill="#efdacc" opacity="0.4"/>
+      <circle cx="198" cy="290" r="3" fill="#2b1a12" opacity="0.5"/>
+      <rect x="210" y="160" width="100" height="90" rx="3" stroke="#2b1a12" stroke-width="1.5" fill="#efdacc" opacity="0.5"/>
+      <ellipse cx="140" cy="370" rx="18" ry="8" fill="#2b1a12" opacity="0.2"/>
+      <path d="M140 370 Q125 340 135 310 Q145 335 140 370Z" fill="#5b7c5e" opacity="0.7"/>
+      <ellipse cx="220" cy="370" rx="18" ry="8" fill="#2b1a12" opacity="0.2"/>
+      <path d="M220 370 Q205 342 214 312 Q224 337 220 370Z" fill="#5b7c5e" opacity="0.7"/>
+      <text x="180" y="85" text-anchor="middle" font-family="'Pinyon Script', cursive" font-size="32" fill="#2b1a12">Grove</text>
+      <text x="180" y="103" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="7" fill="#2b1a12" letter-spacing="3" opacity="0.5">BRUNCH · COFFEE · BERLIN</text>
+    </svg>
+  </div>
+
+  <div class="animate--slide-in" style="transition-delay:0.15s">
+    <span class="section-heading">A warm place, a passionate team</span>
+    <h2 class="block-title">A story rooted<br/>in Berlin.</h2>
+    <div class="field-body">
+      <p>Grove was born in 2021 when Lena and Marcus returned from two years in Auckland with one obsession — why couldn't Berlin have a brunch spot that felt genuinely alive? Seasonal, unhurried, generous.</p>
+      <p>Every plate carries that philosophy. Fresh produce from farms within 100km of Berlin, a menu that changes every three months, and a team that actually cares about what they put in front of you.</p>
+      <p><strong>Come in. Sit down. Let it be a real break.</strong></p>
+    </div>
+    <a href="#" class="link">Hey mate — our story</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════ -->
+<footer class="region-footer" id="visit">
+  <div class="footer-title-wrap">
+    <div class="footer-title-special">See ya!</div>
+  </div>
+
+  <div class="region">
+    <div>
+      <strong class="footer-block-title">Grove · Berlin</strong>
+      <div class="footer-block-body">
+        <address style="font-style:normal">
+          18 Rosenthaler Straße<br/>
+          10119 Berlin Mitte<br/>
+          Germany<br/><br/>
+          <a href="tel:+493012345678">+49 (0) 30 1234 5678</a><br/>
+          <a href="mailto:hello@grove-berlin.de">hello@grove-berlin.de</a>
+        </address>
+        <div class="social-links">
+          <a href="#" title="Instagram">IG</a>
+          <a href="#" title="Facebook">FB</a>
+          <a href="#" title="Google">G</a>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <strong class="footer-block-title">Opening Hours</strong>
+      <div class="footer-block-body">
+        <strong>Coffee & Pastries</strong>
+        <dl class="footer-hours" style="margin-top:0.5rem">
+          <dt>Mon – Fri</dt><dd>8:30 – 18:00</dd>
+          <dt>Saturday</dt><dd>9:00 – 18:00</dd>
+          <dt>Sunday</dt><dd>9:00 – 14:00</dd>
+        </dl>
+        <strong>Brunch</strong>
+        <dl class="footer-hours" style="margin-top:0.5rem">
+          <dt>Daily</dt><dd>9:00 – 14:00</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div>
+      <strong class="footer-block-title">Visit us</strong>
+      <div class="footer-block-body">
+        <p>Walk-ins welcome, but a reserved spot is a guaranteed one. Book online or give us a call.</p>
+        <div class="field-links" style="margin-top:1.5rem;flex-direction:column;align-items:flex-start;gap:0.5rem">
+          <div class="field-link"><a href="#">Reserve a table</a></div>
+          <div class="field-link second"><a href="#">Gift a brunch</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom" style="margin-top:2rem">
+    <span>© Grove 2026 — All rights reserved</span>
+    <div class="footer-bottom-links">
+      <a href="#">Join our team</a>
+      <a href="#">Contact</a>
+      <a href="#">Imprint</a>
+    </div>
+    <span style="opacity:0.4">Built with care in Berlin</span>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT (Haven's animation system)
+     ═══════════════════════════════════════════════════ -->
+<script>
+(function() {
+
+  // Slide-in animations
+  const slideObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+        slideObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.animate--slide-in, .animate--list-item').forEach(el => slideObserver.observe(el));
+
+  // Header is-fixed on scroll
+  const header = document.getElementById('site-header');
+  const onScroll = () => header.classList.toggle('is-fixed', window.scrollY > 40);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Lineart draw animation
+  const lineart = document.getElementById('lineart');
+  if (lineart) {
+    const lineartObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const path = lineart.querySelector('path');
+          if (path && path.getTotalLength) {
+            const len = path.getTotalLength();
+            lineart.style.setProperty('--len', len);
+          }
+          lineart.classList.add('is-active');
+          lineartObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    lineartObserver.observe(lineart);
+  }
+
+})();
+</script>
+</body>
+</html>
